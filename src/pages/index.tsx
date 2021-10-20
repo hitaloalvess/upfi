@@ -32,18 +32,24 @@ export default function Home(): JSX.Element {
     return data?.pages.map( response => response.data).flatMap(page => page.data);
   }, [data]);
 
-  // TODO RENDER LOADING SCREEN
-
+  return(
+    // TODO RENDER LOADING SCREEN
+    isLoading ? (
+      <Loading />
+    ): isError ? (
+      <Error />
+    ) : (
+      <>
+        <Header />
+        <Box maxW={1120} px={20} mx="auto" my={20}>
+          <CardList cards={formattedData} />
+          {/* TODO RENDER LOAD MORE BUTTON IF DATA HAS NEXT PAGE */}
+          {/* {hasNextPage && /*Botão aqui*/}
+        </Box>
+      </>
+    )
+  )
   // TODO RENDER ERROR SCREEN
 
-  return (
-    <>
-      <Header />
-
-      {/* <Box maxW={1120} px={20} mx="auto" my={20}> */}
-        {/* <CardList cards={formattedData} /> */}
-        {/* TODO RENDER LOAD MORE BUTTON IF DATA HAS NEXT PAGE */}
-      {/* </Box> */}
-    </>
-  );
+  
 }
