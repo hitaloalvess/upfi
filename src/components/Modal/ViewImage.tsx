@@ -27,7 +27,6 @@ export function ModalViewImage({
         bg="pGray.800"
           maxW='900px' 
           w="auto"
-            // h="auto"
       >
       <ModalBody p={0} >
         <Image
