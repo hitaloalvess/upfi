@@ -24,16 +24,14 @@ export function CardList({ cards }: CardsProps): JSX.Element {
 
   // TODO FUNCTION HANDLE VIEW IMAGE
   function handleViewImage(url : string){
-    if(!isOpen){
       setImageSelected(url);
       onOpen();
-    }
   }
   return (
     <>
-      <SimpleGrid columns={3} spacing={10}>
+      <SimpleGrid columns={3} spacing={10} >
         {cards.map( card => (
-          <Card 
+          <Card key={card.ts}
             data={card}
             viewImage={handleViewImage}
           />

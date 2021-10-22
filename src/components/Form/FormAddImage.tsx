@@ -11,6 +11,12 @@ interface FormAddImageProps {
   closeModal: () => void;
 }
 
+interface ImageData{
+  title: string;
+  description: string;
+  url: string;
+}
+
 export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
   const [imageUrl, setImageUrl] = useState('');
   const [localImageUrl, setLocalImageUrl] = useState('');
@@ -21,7 +27,7 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
       required: 'Arquivo obrigatório',
       validate:{
         lessThan10MB: value => value[0].size < 10000000 || 'O arquivo deve ser menor que 10MB',
-        acceptedFormats: value => value[0].type.match(/\image\/(jpeg|png|gif)$/i) || 'Somente são aceitos arquivos PNG, JPEG e GIF'  
+        acceptedFormats: value => !!value[0].type.match(/image\/(jpeg|png|gif)$/i) || 'Somente são aceitos arquivos PNG, JPEG e GIF'  
       } 
     },
     title: {
@@ -45,8 +51,11 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
   };
 
   const queryClient = useQueryClient();
-  const mutation = useMutation(async(data : Record<string, unknown>) => {
-    return await api.post('/api/images', data)
+  const mutation = useMutation(async(data : ImageData) => {
+     await api.post('/api/images', {
+        ...data,
+        url: imageUrl
+     })
   },
     {
       onSuccess: () => { queryClient.invalidateQueries('images')}
@@ -63,10 +72,8 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
   } = useForm();
   const { errors }  = formState;
 
-  const onSubmit  = async (data: Record<string, unknown>): Promise<void> => {
-    console.log('Dentro de onSubmit')
+  const onSubmit  = async (data: ImageData): Promise<void> => {
     try {
-      // TODO SHOW ERROR TOAST IF IMAGE URL DOES NOT EXISTS
       if(!imageUrl){
         toast({
           title:'Imagem não adicionada',
@@ -78,9 +85,7 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
 
         return;
       }
-      // TODO EXECUTE ASYNC MUTATION
       mutation.mutateAsync(data)
-      // TODO SHOW SUCCESS TOAST
       toast({
         title:'Imagem cadastrada',
         description: 'Sua imagem foi cadastrada com sucesso',
@@ -90,7 +95,6 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
       })
 
     } catch {
-      // TODO SHOW ERROR TOAST IF SUBMIT FAILED
       toast({
         title: 'Falha no cadastro',
         description: 'Ocorreu um erro ao tentar cadastrar a sua imagem',
@@ -99,8 +103,9 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
         isClosable: true
       })
     } finally {
-      // TODO CLEAN FORM, STATES AND CLOSE MODAL
       reset();
+      setImageUrl('');
+      setLocalImageUrl('');
       closeModal();
     }
   };
@@ -115,13 +120,11 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
           setError={setError}
           trigger={trigger}
           error={errors.image}
-          name="image"
           {...register('image', formValidations.image)}
         />
 
         <TextInput
           placeholder="Título da imagem..."
-          name="title"
           error={errors.title}
           {...register('title', formValidations.title)}
         />
@@ -129,7 +132,6 @@ export function FormAddImage({ closeModal }: FormAddImageProps): JSX.Element {
         <TextInput
           placeholder="Descrição da imagem..."
           error={errors.description}
-          name="description"
           {...register('description', formValidations.description)}
         />
       </Stack>

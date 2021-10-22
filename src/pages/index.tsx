@@ -8,10 +8,30 @@ import { api } from '../services/api';
 import { Loading } from '../components/Loading';
 import { Error } from '../components/Error';
 
+
+interface Image {
+  title: string;
+  description: string;
+  url: string;
+  ts: number;
+  id: string;
+}
+
+interface GetImagesResponse {
+  after: string;
+  data: Image[];
+}
+
 export default function Home(): JSX.Element {
 
-
-  const fetchImages = async ({pageParam = 0}) => await api.get(`/api/images?after=${pageParam}`);
+  async function fetchImages({ pageParam = null }): Promise<GetImagesResponse> {
+    const { data } = await api('/api/images', {
+      params: {
+        after: pageParam,
+      },
+    });
+    return data;
+  }
 
   const {
     data,
@@ -24,31 +44,40 @@ export default function Home(): JSX.Element {
     'images',
     fetchImages,
     {
-      getNextPageParam: (lastPage, pages) => lastPage.data.after
+      getNextPageParam: (lastPage) => lastPage.after || null
     }
   );
 
   const formattedData = useMemo(() =>{
-    return data?.pages.map( response => response.data).flatMap(page => page.data);
+    return data?.pages.map( response => response.data).flat();
   }, [data]);
 
+  if(isLoading){
+    return <Loading />
+  }
+
+  if(!isLoading && isError){
+    return <Error />
+  }
+
   return(
-    isLoading ? (
-      <Loading />
-    ): isError ? (
-      <Error />
-    ) : (
       <>
         <Header />
         <Box maxW={1120} px={20} mx="auto" my={20}>
           <CardList cards={formattedData} />
-          {/* TODO RENDER LOAD MORE BUTTON IF DATA HAS NEXT PAGE */}
-          {hasNextPage && <Button>Carregar mais</Button>}
+          {hasNextPage && 
+            <Button 
+              onClick={() => fetchNextPage()}
+              my={10}
+            >
+              { !isFetchingNextPage
+                ? 'Carregar mais'
+                : 'Carregando...'
+              }
+            </Button>
+          }
         </Box>
       </>
-    )
   )
-  // TODO RENDER ERROR SCREEN
-
   
 }
